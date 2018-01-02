@@ -1,6 +1,7 @@
 from __future__ import print_function
 import mysql.connector
 import server_config
+import logging
 from mysql.connector import errorcode
 
 
@@ -35,7 +36,7 @@ def create_database(cursor):
         cursor.execute(
             "CREATE DATABASE {} DEFAULT CHARACTER SET 'utf8'".format(server_config.mysqlDatabase))
     except mysql.connector.Error as err:
-        print("Failed creating database: {}".format(err))
+        logging.critical("Failed creating database: {}".format(err))
         exit(1)
 
 
@@ -52,18 +53,18 @@ def setup_sql():
             create_database(cursor)
             cnx.database = server_config.mysqlDatabase
         else:
-            print(err)
+            logging.error(err)
             exit(1)
     for name, ddl in TABLES.iteritems():
         try:
-            print("Creating table {}: ".format(name), end='')
+            logging.debug("Creating table {}: ".format(name))
             cursor.execute(ddl)
         except mysql.connector.Error as err:
             if err.errno == errorcode.ER_TABLE_EXISTS_ERROR:
-                print("already exists.")
+                logging.debug("already exists.")
             else:
-                print(err.msg)
+                logging.error(err.msg)
         else:
-            print("OK")
+            logging.debug("OK")
     cursor.close()
     cnx.close()
