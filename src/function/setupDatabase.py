@@ -14,7 +14,7 @@ TABLES['podcast_feeds'] = (
     " `url` VARCHAR(255) NOT NULL,"
     " `categories` TEXT NOT NULL,"
     " PRIMARY KEY (`feed_id`)"
-    " ) ENGINE = InnoDB;")
+    " ) ENGINE = InnoDB DEFAULT CHARSET=utf8")
 TABLES['podcast_episodes'] = (
     "CREATE TABLE `podcast_episodes` ("
     " `id` varchar(255) NOT NULL,"
@@ -25,7 +25,7 @@ TABLES['podcast_episodes'] = (
     " `pubDate` DATETIME NOT NULL,"
     " `addDate` DATETIME NOT NULL,"
     " UNIQUE (`id`)"
-    " ) ENGINE = InnoDB")
+    " ) ENGINE = InnoDB DEFAULT CHARSET=utf8")
 
 
 def create_database(cursor):
