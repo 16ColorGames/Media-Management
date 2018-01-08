@@ -15,6 +15,8 @@ def main():
     
 if __name__ == '__main__':
     args = sys.argv[1:]
+    reload(sys)  
+    sys.setdefaultencoding('utf8')
     if len(args) == 0:
         main()
     else:

@@ -1,0 +1,13 @@
+{% extends "layout.html" %}
+{% block content %}
+  <h1>{{ title }}</h1>
+  <p>{{ description }}</p>
+  <div id="episodes">
+        {% for n in episodes %}
+		<div id = "episode">
+			<h3 style="background-color:AliceBlue">{{n['title']}}</h3>
+			<p>{{n['description']}}</p>
+		</div>
+        {% endfor %}
+  </div>
+{% endblock %}

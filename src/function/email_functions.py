@@ -18,6 +18,7 @@ from email.mime.multipart import MIMEMultipart
 
 import sys
 
+COMMASPACE = ', '
 
 def sendEmail(recepients, subject, message):
   msg = MIMEMultipart('alternative')

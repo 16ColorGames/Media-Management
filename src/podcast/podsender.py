@@ -60,6 +60,6 @@ def send_updates():
     
 def read_template(filename):
     """This should probably be moved to functions eventually"""
-    with open(filename, 'r', encoding='utf-8') as template_file:
+    with open(filename, 'r') as template_file:
         template_file_content = template_file.read()
     return Template(template_file_content)

@@ -1,0 +1,9 @@
+{% extends "layout.html" %}
+{% block content %}
+  <p>Current podcasts:</p>
+  <div id="feeds">
+	{% for n in feeds %}
+	<a href="/podcast/{{n['feed_id']}}"><h3>{{n['name']}}</h3></a>
+	{% endfor %}
+  </div>
+{% endblock %}

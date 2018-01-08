@@ -12,6 +12,7 @@ TABLES['podcast_feeds'] = (
     " `feed_id` INT NOT NULL AUTO_INCREMENT,"
     " `name` VARCHAR(255) NOT NULL,"
     " `url` VARCHAR(255) NOT NULL,"
+    " `description` TEXT NOT NULL,"
     " `categories` TEXT NOT NULL,"
     " PRIMARY KEY (`feed_id`)"
     " ) ENGINE = InnoDB DEFAULT CHARSET=utf8")
