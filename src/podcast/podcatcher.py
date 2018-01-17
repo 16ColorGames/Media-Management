@@ -31,6 +31,48 @@ def update_feeds():
     cnx.close()
 
 
+def update_descriptions():
+    """Connects to the database and attempts to update the desxcriptions"""
+    cnx = mysql.connector.connect(user=server_config.mysqlUser, password=server_config.mysqlPassword, database=server_config.mysqlDatabase)
+    cursor = cnx.cursor(dictionary=True)
+    update_cursor = cnx.cursor(dictionary=True,buffered=True)
+    feed_query = "SELECT * FROM podcast_feeds"  # select all of our feeds
+    logging.info("Updating desc")
+    cursor.execute(feed_query)
+    update_desc = ("UPDATE podcast_feeds SET description = %s WHERE feed_id = %s ")
+    feeds = []
+    
+    for row in cursor:
+        feeds.append(row)  # Clear out the cursor
+    
+    for row in feeds:
+        logging.info("{name} has id {id} and url {url}".format(name=row['name'], id=row['feed_id'], url=row['url']))
+        feed = feedparser.parse( row['url'] )  # read the feed into a dict object
+        try:
+            if 'summary' in feed['feed']:  # Some feeds are formatted incorrectly, so we must check for this manually
+                update_cursor.execute(update_desc, (feed['feed']['summary'], row['feed_id']))
+            else:
+                update_cursor.execute(update_desc, ("Summary not found", row['feed_id']))
+            cnx.commit()  # save our changes to the database
+        except Exception as inst:
+            logging.error(inst)
+        try:
+            print(feed['feed']['image'])
+            file = feed['feed']['image']['href']
+            path = urlparse.urlparse(file).path
+            extension = os.path.splitext(path)[1]
+            pathlib2.Path(server_config.podcast_directory + "/images/").mkdir(parents=True, exist_ok=True) 
+            save = server_config.podcast_directory + "/images/" + slugify(row["name"]);
+            
+            wget.download(file, save)  # actually download the file here
+        except Exception as inst:
+            logging.error(inst)
+        
+    cursor.close()
+    update_cursor.close()
+    cnx.close()
+
+
 def retrieve_episodes(row):
     cnx = mysql.connector.connect(user=server_config.mysqlUser, password=server_config.mysqlPassword, database=server_config.mysqlDatabase)
     episode_cursor = cnx.cursor(dictionary=True)
