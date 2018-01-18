@@ -21,7 +21,7 @@ from paste.cascade import Cascade
 from slugify import slugify
 
 from datetime import datetime, date, timedelta
-from google.appengine.api import users
+# from google.appengine.api import users
 
 def remove_prefix(text, prefix):
     if text.startswith(prefix):
@@ -185,8 +185,6 @@ def render_template(self, view_filename, params=None):
 
 routes = [
     ('/', MainPage),
-    ('/session/add/(.*)', SessionSet),
-    ('/session/view', SessionView),
     ('/podcast', PodcastDisplay),
     ('/podcast/', PodcastDisplay),
     ('/podcast/feeds', PodcastDisplay),

@@ -1,0 +1,25 @@
+[[source]]
+
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+
+[dev-packages]
+
+
+
+[packages]
+
+wget = "*"
+mysql-connector-python = "*"
+feedparser = "*"
+"pathlib2" = "*"
+python-slugify = "*"
+"jinja2" = "*"
+dateutils = "*"
+cascade = "*"
+"webapp2" = "*"
+logging = "*"
+webob = "*"
+paste = "*"
