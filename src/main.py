@@ -6,6 +6,8 @@ import server.main_server as server
 import datetime
 import logging
 import sys
+import os
+import gaerun
 
 def main():
     setupDatabase.setup_sql()
@@ -16,6 +18,7 @@ if __name__ == '__main__':
     logging.basicConfig(filename=server_config.logfile,level=logging.DEBUG)
     args = sys.argv[1:]
     reload(sys)  
+    #os.environ['AUTH_DOMAIN'] = "google"
     sys.setdefaultencoding('utf8')
     if len(args) == 0:
         main()
