@@ -233,7 +233,7 @@ class AuthenticatedHandler(BaseHandler):
     self.render_template('authenticated.html')
     
       
-class PodcastDisplay(webapp2.RequestHandler):
+class PodcastDisplay(BaseHandler):
     def get(self):
         self.session_store = sessions.get_store(request=self.request)
         # Connect with the MySQL Server
@@ -250,14 +250,10 @@ class PodcastDisplay(webapp2.RequestHandler):
             feeds.append(row)
         data["feeds"] = feeds
         data["description"] = "<a href='/podcast/add/" + date.today().strftime('%Y-%m-%d') + "'>Podcasts added to the database today</a>"
-        return render_template(self, 'podlist.html', data)
-    @webapp2.cached_property
-    def session(self):
-        # Returns a session using the default cookie key.
-        return self.session_store.get_session()
+        self.render_template('podlist.html', data)
         
         
-class FeedDisplay(webapp2.RequestHandler):
+class FeedDisplay(BaseHandler):
     def get(self, feed_id):
         self.session_store = sessions.get_store(request=self.request)
         # Connect with the MySQL Server
@@ -285,14 +281,10 @@ class FeedDisplay(webapp2.RequestHandler):
         else:
             data["title"] = "Error: Feed not found"
             data["error"] = "There was an issue while retrieving the feed data. The feed probably wasn't added to the database properly. " + feed_query
-            return render_template(self, 'error.html', data)
-    @webapp2.cached_property
-    def session(self):
-        # Returns a session using the default cookie key.
-        return self.session_store.get_session()
+            self.render_template('error.html', data)
 
 
-class PodcastDateAdded(webapp2.RequestHandler):
+class PodcastDateAdded(BaseHandler):
     def get(self, day):
         self.session_store = sessions.get_store(request=self.request)
         # Connect with the MySQL Server
@@ -317,14 +309,10 @@ class PodcastDateAdded(webapp2.RequestHandler):
         data["description"] = "<a href='" + prevdatestr + "'>Previous Day</a> Episodes added on " + day + " <a href='" + nextdatestr + "'>Next Day</a>"
         data["episodes"] = episodes
         data["title"] = "Episodes added on " + day
-        return render_template(self, 'multi_episode_display.html', data)
-    @webapp2.cached_property
-    def session(self):
-        # Returns a session using the default cookie key.
-        return self.session_store.get_session()
+        self.render_template('multi_episode_display.html', data)
 
         
-class PodcastDatePublished(webapp2.RequestHandler):
+class PodcastDatePublished(BaseHandler):
     def get(self, day):
         self.session_store = sessions.get_store(request=self.request)
         # Connect with the MySQL Server
@@ -349,22 +337,8 @@ class PodcastDatePublished(webapp2.RequestHandler):
         data["description"] = "<a href='" + prevdatestr + "'>Previous Day</a> Episodes added on " + day + " <a href='" + nextdatestr + "'>Next Day</a>"
         data["episodes"] = episodes
         data["title"] = "Episodes published on " + day
-        return render_template(self, 'multi_episode_display.html', data)
-    @webapp2.cached_property
-    def session(self):
-        # Returns a session using the default cookie key.
-        return self.session_store.get_session()
+        self.render_template('multi_episode_display.html', data)
 
-        
-class SessionSet(webapp2.RequestHandler):
-    def get(self, data):
-        self.session_store = sessions.get_store(request=self.request)
-        
-        return render_template(self, 'simple.html', {"content": "Added Data to Session"})
-    @webapp2.cached_property
-    def session(self):
-        # Returns a session using the default cookie key.
-        return self.session_store.get_session()
 
 class LogoutHandler(BaseHandler):
   def get(self):
@@ -405,16 +379,6 @@ class ForgotPasswordHandler(BaseHandler):
     self.render_template('forgot.html', params)
     
     
-def render_template(self, view_filename, params=None):
-    if not params:
-        params = {}
-    path = os.path.join(os.path.dirname(__file__), '../templates', view_filename)
-    file = open(path, 'r')
-    text = file.read()
-    file.close()
-    rtemplate = Environment(loader=FileSystemLoader('templates')).from_string(text)
-    self.response.out.write(rtemplate.render( params))
-
 routes = [
     webapp2.Route('/', MainPage, name='home'),
     ('/signup', SignupHandler),
