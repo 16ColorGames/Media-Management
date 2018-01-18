@@ -21,6 +21,7 @@ from paste.cascade import Cascade
 from slugify import slugify
 
 from datetime import datetime, date, timedelta
+from google.appengine.api import users
 
 def remove_prefix(text, prefix):
     if text.startswith(prefix):
@@ -160,7 +161,18 @@ class PodcastDatePublished(webapp2.RequestHandler):
         # Returns a session using the default cookie key.
         return self.session_store.get_session()
 
+        
+class SessionSet(webapp2.RequestHandler):
+    def get(self, data):
+        self.session_store = sessions.get_store(request=self.request)
+        
+        return render_template(self, 'simple.html', {"content": "Added Data to Session"})
+    @webapp2.cached_property
+    def session(self):
+        # Returns a session using the default cookie key.
+        return self.session_store.get_session()
 
+        
 def render_template(self, view_filename, params=None):
     if not params:
         params = {}
@@ -173,6 +185,8 @@ def render_template(self, view_filename, params=None):
 
 routes = [
     ('/', MainPage),
+    ('/session/add/(.*)', SessionSet),
+    ('/session/view', SessionView),
     ('/podcast', PodcastDisplay),
     ('/podcast/', PodcastDisplay),
     ('/podcast/feeds', PodcastDisplay),

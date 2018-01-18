@@ -12,5 +12,6 @@ If you are planning on running your own instance, you will need the following py
 	webapp2
 	webapp2_extras
 	cascade
+	https://cloud.google.com/appengine/downloads#Google_App_Engine_SDK_for_Python
 	
 In addition, you will need a local instance of MySQL and a user you are comfortable giving acces to. Place your systems relevant settings in src/serverconfig.py
