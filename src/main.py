@@ -15,11 +15,14 @@ def main():
     podsender.send_updates()
     
 if __name__ == '__main__':
-    logging.basicConfig(filename=server_config.logfile,level=logging.DEBUG)
+   # logging.basicConfig(filename=server_config.logfile,level=logging.DEBUG)
+    logging.basicConfig(level=logging.DEBUG)
     args = sys.argv[1:]
-    reload(sys)  
-    #os.environ['AUTH_DOMAIN'] = "google"
+    reload(sys)
     sys.setdefaultencoding('utf8')
+    logging.info("Started Logging")
+    print logging.getLoggerClass().root.handlers
+    gaerun.startup()
     if len(args) == 0:
         main()
     else:

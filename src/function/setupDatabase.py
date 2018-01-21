@@ -7,6 +7,7 @@ from mysql.connector import errorcode
 
 # setup our table definitions
 TABLES = {}
+TABLESMOD = {}
 TABLES['podcast_feeds'] = (
     "CREATE TABLE `podcast_feeds` ("
     " `feed_id` INT NOT NULL AUTO_INCREMENT,"
@@ -27,8 +28,22 @@ TABLES['podcast_episodes'] = (
     " `addDate` DATETIME NOT NULL,"
     " UNIQUE (`id`)"
     " ) ENGINE = InnoDB DEFAULT CHARSET=utf8")
+TABLES['users'] = (
+    "CREATE TABLE `users` (                  "
+    "  `user_id` int(11) NOT NULL,           "
+    "  `password` varchar(512) NOT NULL,     "
+    "  `email` varchar(50) NOT NULL,         "
+    "  `activation_key` varchar(12) NOT NULL,"
+    "  `friendly_name` varchar(64) NOT NULL  "
+    ") ENGINE=InnoDB DEFAULT CHARSET=utf8;   ")
 
-
+TABLESMOD['a_users_mod'] = (
+    "ALTER TABLE `users`"
+    "  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT;")
+TABLESMOD['a_users_mod2'] = (
+    "ALTER TABLE `users`"
+    "  ADD PRIMARY KEY (`user_id`),"
+    "  ADD UNIQUE KEY `email` (`email`);")
 def create_database(cursor):
     """
     This funtion will attempt to create the database defined in server_config.py
@@ -59,6 +74,17 @@ def setup_sql():
     for name, ddl in TABLES.iteritems():
         try:
             logging.debug("Creating table {}: ".format(name))
+            cursor.execute(ddl)
+        except mysql.connector.Error as err:
+            if err.errno == errorcode.ER_TABLE_EXISTS_ERROR:
+                logging.debug("already exists.")
+            else:
+                logging.error(err.msg)
+        else:
+            logging.debug("OK")
+    for name, ddl in TABLESMOD.iteritems():
+        try:
+            logging.debug("Modding table {}: ".format(name))
             cursor.execute(ddl)
         except mysql.connector.Error as err:
             if err.errno == errorcode.ER_TABLE_EXISTS_ERROR:

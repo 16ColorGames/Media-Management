@@ -103,7 +103,7 @@ class BaseHandler(webapp2.RequestHandler):
     params = {
       'content': message
     }
-    render_template(self, 'simple.html', params)
+    self.render_template('simple.html', params)
 
   # this is needed for webapp2 sessions to work
   def dispatch(self):
@@ -120,43 +120,33 @@ class BaseHandler(webapp2.RequestHandler):
     
 class SignupHandler(BaseHandler):
   def get(self):
-    return render_template(self, 'signup.html')
+    self.render_template('signup.html')
 
   def post(self):
-    user_name = self.request.get('username')
     email = self.request.get('email')
     name = self.request.get('name')
     password = self.request.get('password')
-    last_name = self.request.get('lastname')
 
-    unique_properties = ['email_address']
-    user_data = self.user_model.create_user(user_name,
-      unique_properties,
-      email_address=email, name=name, password_raw=password,
-      last_name=last_name, verified=False)
+    user_data = self.user_model.create_user(
+      email_address=email, friendly=name, password_raw=password,
+      verified=False)
     if not user_data[0]: #user_data is a tuple
       self.display_message('Unable to create user for email %s because of \
-        duplicate keys %s' % (user_name, user_data[1]))
+        duplicate keys %s' % (email, user_data[1]))
       return
     
-    user = user_data[1]
-    user_id = user.get_id()
-
-    token = self.user_model.create_signup_token(user_id)
-
-    verification_url = self.uri_for('verification', type='v', user_id=user_id,
-      signup_token=token, _full=True)
+    verify = user_data[1]
 
     msg = 'Send an email to user in order to verify their address. \
           They will be able to do so by visiting <a href="{url}">{url}</a>'
 
-    self.display_message(msg.format(url=verification_url))
+    self.display_message(msg.format(url=verify))
     
     
 class MainPage(BaseHandler):
     def get(self):
         self.session_store = sessions.get_store(request=self.request)
-        return render_template(self, 'home.html', {"title": "Media Management"})
+        self.render_template('home.html', {"title": "Media Management"})
 
         
 class VerificationHandler(BaseHandler):
@@ -197,7 +187,7 @@ class VerificationHandler(BaseHandler):
         'user': user,
         'token': signup_token
       }
-      return render_template(self, 'resetpassword.html', params)
+      self.render_template('resetpassword.html', params)
     else:
       logging.info('verification type not supported')
       self.abort(404)
@@ -224,7 +214,7 @@ class LoginHandler(BaseHandler):
       'username': username,
       'failed': failed
     }
-    render_template(self, 'login.html', params)
+    self.render_template('login.html', params)
 
     
 class AuthenticatedHandler(BaseHandler):
@@ -277,7 +267,7 @@ class FeedDisplay(BaseHandler):
                 episodes.append(eprow)
             data["image"] = "/images/" + slugify(row['name'])
             data["episodes"] = episodes
-            return render_template(self, 'podfeed.html', data)
+            self.render_template('podfeed.html', data)
         else:
             data["title"] = "Error: Feed not found"
             data["error"] = "There was an issue while retrieving the feed data. The feed probably wasn't added to the database properly. " + feed_query

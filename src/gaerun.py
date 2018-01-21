@@ -19,10 +19,6 @@
 
 import logging, os, sys
 
-# set logging to debug
-# 
-logging.basicConfig(level=logging.DEBUG)
-
 APP_PATH = os.path.dirname(__file__)
 
 def load_sdk():
@@ -178,7 +174,9 @@ def wrap_except(code_which_might_except):
     except:
         return sys.exc_info()[1]
 
-load_sdk()
-setup_app_env()
-register_stubs()
-logging.info("GAE-RUN v0.2 - Latest version: http://bit.ly/92N1Cw")
+        
+def startup():
+    load_sdk()
+    setup_app_env()
+    register_stubs()
+    logging.info("GAE-RUN v0.2 - Latest version: http://bit.ly/92N1Cw")
