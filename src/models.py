@@ -29,7 +29,8 @@ class User(object):
             A tuple ``(User, timestamp)``, with a user object and
             the token timestamp, or ``(None, None)`` if both were not found.
         """
-
+        return None, None
+        
     @classmethod
     def get_by_auth_password(cls, auth_id, password):
         """Returns a user object, validating password.

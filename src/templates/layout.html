@@ -2,17 +2,24 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  {% if style %}
+  <link rel="stylesheet" href="/styles/{{ style }}">
+  {% else %}
   <link rel="stylesheet" href="/styles/main.css">
+  {% endif %}
   <title>{{ title }}</title>
-{% block extra_head %}{% endblock %}
+  <script type="text/javascript" src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+{% block head %}{% endblock %}
 </head>
 
 <body>
-{% if user.name %}
-Logged in as {{ user.name }}. <a href="/logout">Log Out</a>
-{% else %}
-<a href="/login">Log In</a> or <a href="/signup">Register</a>
-{% endif %}
+<div id="login">
+	{% if user.name %}
+	Logged in as {{ user.name }}. <a href="/logout">Log Out</a>
+	{% else %}
+	<a href="/login">Log In</a> or <a href="/signup">Register</a>
+	{% endif %}
+</div>
 <div id="content">
 {% block content %}{% endblock %}
 </div>

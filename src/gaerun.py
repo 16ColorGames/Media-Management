@@ -5,8 +5,7 @@
 # Usage: 
 #  - Make sure you have Google App Engine installed. 
 #  - Download this file and save as gaerun.py in your app folder.
-#  - Add "import gaerun" at the t
-# op of your code.
+#  - Add "import gaerun" at the top of your code.
 #  - Run your code using command line / editor. Tip: (command + R) in textmate
 # 
 # Example:

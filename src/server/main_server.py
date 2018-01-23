@@ -293,6 +293,7 @@ class PodcastDateAdded(BaseHandler):
         feed_cursor.execute(feed_query)
         episodes = []
         for row in feed_cursor:
+            row['file'] = remove_prefix(row['file'], server_config.podcast_directory)
             episodes.append(row)
         
         data = {}
@@ -321,6 +322,7 @@ class PodcastDatePublished(BaseHandler):
         feed_cursor.execute(feed_query)
         episodes = []
         for row in feed_cursor:
+            row['file'] = remove_prefix(row['file'], server_config.podcast_directory)
             episodes.append(row)
         
         data = {}
