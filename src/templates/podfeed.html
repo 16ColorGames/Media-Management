@@ -1,32 +1,18 @@
 {% extends "layout.html" %}
 {% block content %}
-  <audio id="audio" controls="controls">
-	<source id="audioSource" src=""></source>
-	Your browser does not support the audio format.
-  </audio>
-  <div>
-	  <h1>{{ title }}</h1>
-	  <p><img src="{{image}}" style="width:250px;height:250px;" ALIGN="left">{{ description }}</p>
-  </div>
-  <div id="episodes">
-        {% for n in episodes %}
-		<div id = "episode">
-			<h3 id="title">{{n['title']}} - Released {{n['pubDate']}} <a href="{{n['file']}}">💾</a><a href="#" id="play" data-value="{{n['file']}}">▶</a></h3>
-			<p>{{n['description']}}</p>
-		</div>
-        {% endfor %}
-  </div>
-  <script>
-     $("a#play").click(function() {
-		console.log("Clicked")
-	
-		var audio = document.getElementById('audio');
-	
-		var source = document.getElementById('audioSource');
-		source.src = $(this).attr('data-value');
-	
-		audio.load(); //call this to just preload the audio without playing
-		audio.play(); //call this to play the song right away
-	});
-</script>
+<div>
+   <h1>{{ title }}</h1>
+   <p><img src="{{image}}" style="width:250px;height:250px;" ALIGN="left">{{ description }}</p>
+</div>
+<div style="width:100%;text-align:center;clear:both;font-size:.75em;font-style:italic;">
+</div>
+<div id="episodes">
+   {% for n in episodes %}
+   <div id = "episode">
+      <h3 id="title">{{n['title']}} - Released {{n['pubDate']}} <a href="{{n['file']}}">💾</a><a href="#" id="play" data-value="{{n['file']}}" data-title="{{n['title']}}">▶</a></h3>
+      <p>{{n['description']}}</p>
+   </div>
+   {% endfor %}
+</div>
+{% include 'audioplayer.html' %}
 {% endblock %}

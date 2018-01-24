@@ -1,0 +1,51 @@
+<div id="audiomedia" class="audiomedia" style="display:none">
+    <a href="#" id="pauseplay" class="material-icons">play_arrow</a><i id="currentTime">0:00</i><br><i id="playertitle"></i>
+</div>
+<script>
+    var audio = document.createElement('audio');
+
+    var source = document.getElementById('audioSource');
+    $("a#play").click(function() {
+        console.log("Clicked")
+        audio.src = $(this).attr('data-value');
+		
+        document.getElementById("audiomedia").style.display = "block";
+        document.getElementById("playertitle").innerHTML = $(this).attr('data-title');
+        audio.load(); //call this to just preload the audio without playing
+        audio.play(); //call this to play the song right away
+    });
+
+    // Assign an ontimeupdate event to the <video> element, and execute a function if the current playback position has changed
+    audio.ontimeupdate = function() {
+        timeUpdate()
+    };
+
+    function timeUpdate() {
+        // Display the current position of the video in a <p> element with id="demo"
+        document.getElementById("currentTime").innerHTML = Math.floor(audio.currentTime/3600)+":"+("0" + (Math.floor(audio.currentTime/60) % 60)).slice(-2) + ":" + ("0" + Math.floor(audio.currentTime % 60)).slice(-2);
+    }
+
+    audio.onplay = function() {
+        resumePlay()
+    };
+
+    function resumePlay() {
+        document.getElementById("pauseplay").innerHTML = "pause";
+    }
+
+    audio.onpause = function() {
+        pausePlay()
+    };
+
+    function pausePlay() {
+        document.getElementById("pauseplay").innerHTML = "play_arrow";
+    }
+
+    $("a#pauseplay").click(function() {
+        if (audio.paused) {
+            audio.play();
+        } else {
+            audio.pause()
+        }
+    });
+</script>

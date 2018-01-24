@@ -1,13 +1,13 @@
 {% extends "layout.html" %}
 {% block content %}
-  <p>Current podcasts:</p>
   <p>{{description}}</p>
   <div id="episodes">
         {% for n in episodes %}
 		<div id = "episode">
-			<a href="{{n['file']}}"><h3 id="title">{{n['title']}} - Released {{n['pubDate']}}</h3></a>
+			<h3 id="title">{{n['title']}} - Released {{n['pubDate']}} <a href="{{n['file']}}">💾</a><a href="#" id="play" data-value="{{n['file']}}" data-title="{{n['title']}}">▶</a></h3>
 			<p>{{n['description']}}</p>
 		</div>
         {% endfor %}
   </div>
+{% include 'audioplayer.html' %}
 {% endblock %}

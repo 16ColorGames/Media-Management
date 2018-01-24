@@ -9,6 +9,7 @@
   {% endif %}
   <title>{{ title }}</title>
   <script type="text/javascript" src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 {% block head %}{% endblock %}
 </head>
 
@@ -19,6 +20,9 @@
 	{% else %}
 	<a href="/login">Log In</a> or <a href="/signup">Register</a>
 	{% endif %}
+</div>
+<div class="topnav">
+	<a href="/podcast">Podcast Feeds</a>
 </div>
 <div id="content">
 {% block content %}{% endblock %}
