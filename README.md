@@ -5,4 +5,6 @@ Add a package using 'pipenv install PACKAGE' in the root dir
 
 	https://cloud.google.com/appengine/downloads#Google_App_Engine_SDK_for_Python
 	
-In addition, you will need a local instance of MySQL and a user you are comfortable giving acces to. Place your systems relevant settings in src/serverconfig.py
+In addition, you will need a local instance of MySQL and a user you are comfortable giving acces to. Place your systems relevant settings in src/serverconfig.py\
+
+You can use https://material.io/icons/ to insert icons on any page using a tag with class="material-icons" and content of the name of your preferred icon

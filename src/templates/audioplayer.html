@@ -1,10 +1,26 @@
+
 <div id="audiomedia" class="audiomedia" style="display:none">
     <a href="#" id="pauseplay" class="material-icons">play_arrow</a><i id="currentTime">0:00</i><br><i id="playertitle"></i>
+	<div id="slider"></div>
 </div>
 <script>
+
+$( "#slider" ).slider({
+    min: 0,
+    max: 150,
+    value: 0,
+	animate: "slow"
+});
+
     var audio = document.createElement('audio');
 
     var source = document.getElementById('audioSource');
+	// Update the current slider value (each time you drag the slider handle)
+	$( "#slider" ).on( "slide", function( event, ui ) {
+		audio.currentTime =ui.value;
+	} );
+	
+	//https://material.io/icons/
     $("a#play").click(function() {
         console.log("Clicked")
         audio.src = $(this).attr('data-value');
@@ -15,18 +31,19 @@
         audio.play(); //call this to play the song right away
     });
 
-    // Assign an ontimeupdate event to the <video> element, and execute a function if the current playback position has changed
+    // Assign an ontimeupdate event to the <audio> element, and execute a function if the current playback position has changed
     audio.ontimeupdate = function() {
-        timeUpdate()
+        document.getElementById("currentTime").innerHTML = Math.floor(audio.currentTime/3600)+":"+("0" + (Math.floor(audio.currentTime/60) % 60)).slice(-2) + ":" + ("0" + Math.floor(audio.currentTime % 60)).slice(-2) + "/" + Math.floor(audio.duration/3600)+":"+("0" + (Math.floor(audio.duration/60) % 60)).slice(-2) + ":" + ("0" + Math.floor(audio.duration % 60)).slice(-2);
+		$( "#slider" ).slider( "option", "value", Math.floor(audio.currentTime) );
     };
 
-    function timeUpdate() {
-        // Display the current position of the video in a <p> element with id="demo"
-        document.getElementById("currentTime").innerHTML = Math.floor(audio.currentTime/3600)+":"+("0" + (Math.floor(audio.currentTime/60) % 60)).slice(-2) + ":" + ("0" + Math.floor(audio.currentTime % 60)).slice(-2);
-    }
+	audio.ondurationchange = function() {
+		$( "#slider" ).slider( "option", "max", Math.floor(audio.duration) );
+		$( "#slider" ).slider( "option", "value", 0 );
+	}
 
     audio.onplay = function() {
-        resumePlay()
+        resumePlay();
     };
 
     function resumePlay() {
@@ -34,7 +51,7 @@
     }
 
     audio.onpause = function() {
-        pausePlay()
+        pausePlay();
     };
 
     function pausePlay() {

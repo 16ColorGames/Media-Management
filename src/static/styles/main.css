@@ -47,3 +47,7 @@
 body {
     margin-top: 50px; /* Add a top margin to avoid content overlay */
 }
+#slider {
+	width: 95%;
+	margin: auto;
+}
