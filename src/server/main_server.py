@@ -230,7 +230,7 @@ class PodcastDisplay(BaseHandler):
         cnx = mysql.connector.connect(user=server_config.mysqlUser, password=server_config.mysqlPassword, database=server_config.mysqlDatabase)
        
         feed_cursor = cnx.cursor(dictionary=True)
-        feed_query = "SELECT * FROM podcast_feeds" # select all of our feeds
+        feed_query = "SELECT * FROM podcast_feeds ORDER BY name" # select all of our feeds
         feed_cursor.execute(feed_query)
         data = {"title": "Podcast Feeds"}
         feeds = []
@@ -243,6 +243,16 @@ class PodcastDisplay(BaseHandler):
         self.render_template('podlist.html', data)
         
         
+
+        
+class MasterFeedForward(BaseHandler):
+    def get(self, xml):
+        data = {}
+        with open(server_config.podcast_directory + ".feeds/" + xml.lower(), 'r') as f:
+            data['feed'] = f.read()
+        self.render_template('xml_feed.html', data)
+
+
 class FeedDisplay(BaseHandler):
     def get(self, feed_id):
         self.session_store = sessions.get_store(request=self.request)
@@ -279,6 +289,7 @@ class PodcastDateAdded(BaseHandler):
         self.session_store = sessions.get_store(request=self.request)
         # Connect with the MySQL Server
         cnx = mysql.connector.connect(user=server_config.mysqlUser, password=server_config.mysqlPassword, database=server_config.mysqlDatabase)
+        cnx2 = mysql.connector.connect(user=server_config.mysqlUser, password=server_config.mysqlPassword, database=server_config.mysqlDatabase)
         
         theday = datetime.strptime(day, "%Y-%m-%d").date()
         
@@ -288,15 +299,23 @@ class PodcastDateAdded(BaseHandler):
         nextdatestr = nextday.strftime('%Y-%m-%d')
        
        
+        data = {}
+        
         feed_cursor = cnx.cursor(dictionary=True)
         feed_query = "SELECT * FROM podcast_episodes WHERE addDate BETWEEN '" + day + " 00:00:00' AND '" + day + " 23:59:59'"  # select our feed
         feed_cursor.execute(feed_query)
         episodes = []
         for row in feed_cursor:
             row['file'] = remove_prefix(row['file'], server_config.podcast_directory)
+            name_cursor = cnx2.cursor(dictionary=True)
+            name_query = "SELECT * FROM podcast_feeds WHERE feed_id = " + str(row['feed'])
+            name_cursor.execute(name_query)
+            row['feed_id'] = row['feed']
+            for feed in name_cursor:
+                row['feed'] = feed['name']
+                
             episodes.append(row)
         
-        data = {}
         data["description"] = "<a href='" + prevdatestr + "'>Previous Day</a> Episodes added on " + day + " <a href='" + nextdatestr + "'>Next Day</a>"
         data["episodes"] = episodes
         data["title"] = "Episodes added on " + day
@@ -381,6 +400,7 @@ routes = [
     ('/podcast/', PodcastDisplay),
     ('/podcast/feeds', PodcastDisplay),
     ('/podcast/feeds/', PodcastDisplay),
+    ('/podcast/masterfeeds/(.*\.xml$)', MasterFeedForward),
     ('/podcast/feed/(\d+)', FeedDisplay),
     webapp2.Route('/<type:v|p>/<user_id:\d+>-<signup_token:.+>',
       handler=VerificationHandler, name='verification'),

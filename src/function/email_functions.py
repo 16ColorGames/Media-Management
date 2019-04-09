@@ -11,6 +11,7 @@ import server_config
 # Import smtplib for the actual sending function
 import smtplib
 
+from email.Utils import COMMASPACE, formatdate
 # Here are the email package modules we'll need
 from email.mime.image import MIMEImage
 from email.mime.text import MIMEText
@@ -25,17 +26,17 @@ def sendEmail(recepients, subject, message):
   msg['Subject'] = subject
   me = 'no-reply@16colorgames.com'
   msg['From'] = me
-  msg['To'] = COMMASPACE.join(recepients)
+  msg['To'] = "you"
+  msg['Date'] = formatdate(localtime=True)
   body = MIMEText(message, 'plain', 'utf-8')
   msg.attach(body)
   
   s = smtplib.SMTP('localhost')
   s.set_debuglevel(1)
-  s.ehlo()
-  s.starttls()
-  s.ehlo
+  #s.starttls()
+  #s.ehlo
   
   s.sendmail(me, recepients, msg.as_string())
-  s.quit()
+  s.close()
 
   return

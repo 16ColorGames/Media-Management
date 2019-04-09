@@ -5,11 +5,12 @@ import server_config
 import logging
 import time
 import datetime
-import wget
+import cfscrape
 import urlparse
 import os
 import pathlib2
 import re
+import urllib
 from slugify import slugify
 from dateutil import parser
 from mysql.connector import errorcode
@@ -88,6 +89,9 @@ def retrieve_episodes(row):
     for episode_row in episode_cursor:
         episode_ids.append(episode_row['id'])
         
+    
+    scraper = cfscrape.create_scraper()
+    
     # iterate through episodes and attempt to download new ones
     try:
         feed = feedparser.parse( row['url'] )
@@ -107,7 +111,14 @@ def retrieve_episodes(row):
                     pathlib2.Path(server_config.podcast_directory + "/" + slugify(row["name"]) + "/").mkdir(parents=True, exist_ok=True) 
                     save = server_config.podcast_directory + "/" + slugify(row["name"]) + "/" + slugify(item["title"]) + extension;
                     
-                    wget.download(file, save)  # actually download the file here
+                    cfurl = scraper.get(file).content
+                    with open(save, 'wb') as f:
+                        f.write(cfurl)
+                    
+                    #data = urllib.URLopener()
+                    #data.retrieve(file, save)
+                    
+                    #wget.download(file, save)  # actually download the file here
                     pub = parser.parse(item["published"]).strftime('%Y-%m-%d %H:%M:%S')  # format the publish date
                     now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # format the current time
                     insert_cursor.execute(add_episode, (item["id"], item["title"], save, item["description"], row["feed_id"], pub, now))

@@ -18,7 +18,7 @@ todaystr = "'" + str(today.year) + "-" + "%02d"%(today.month) + "-" + "%02d"%(to
 COMMASPACE = ', '
 
 # a temp list of subscribers. this should be pulled from the DB
-subscribers = ("oa10712xbox@gmail.com", "allen@16colorgames.com")
+subscribers = ("oa10712xbox@gmail.com")
 
   
 def send_updates():

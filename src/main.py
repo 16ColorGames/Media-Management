@@ -2,6 +2,7 @@ import server_config
 import function.setupDatabase as setupDatabase
 import podcast.podcatcher as podcatcher
 import podcast.podsender as podsender
+import podcast.podfeed as podfeed
 import server.main_server as server
 import datetime
 import logging
@@ -10,9 +11,11 @@ import os
 import gaerun
 
 def main():
-    setupDatabase.setup_sql()
+    #setupDatabase.setup_sql()
     podcatcher.update_feeds()
-    podsender.send_updates()
+    #podsender.send_updates()
+    podfeed.generate_feeds()
+    
     
 if __name__ == '__main__':
    # logging.basicConfig(filename=server_config.logfile,level=logging.DEBUG)
