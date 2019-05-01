@@ -5,10 +5,10 @@ from decimal import Decimal
 from datetime import datetime, date, timedelta
 import pytz
 
-import mysql.connector
 import logging
 
 import server_config
+import pymongo
 
 import sys
 import re
@@ -16,6 +16,7 @@ import pathlib2
 from string import Template
 from feedgen.feed import FeedGenerator
 import re
+
 def remove_control_characters(html):
     def str_to_int(s, default, base=10):
         if int(s, base) < 0x10000:
@@ -28,26 +29,24 @@ def remove_control_characters(html):
         
 def generate_feeds():
     pathlib2.Path(server_config.podcast_directory + "/.feeds").mkdir(parents=True, exist_ok=True) 
-    # Connect with the MySQL Server
-    cnx = mysql.connector.connect(user=server_config.mysqlUser, password=server_config.mysqlPassword, database=server_config.mysqlDatabase)
-    # Get two cursors
-    feed_cursor = cnx.cursor(dictionary=True)
-    feed_query = "SELECT * FROM podcast_feeds"  # select all of our feeds
     
-    feed_cursor.execute(feed_query)
+    myclient = pymongo.MongoClient(server_config.mongodbURL)
+    mydb = myclient[server_config.mongodbDB]
+    mycol = mydb["feeds"]
+    
     by_id = {}
     tags = {}
     tags['all'] = []
     
-    for row in feed_cursor:
-        by_id[row['feed_id']] = row['name']
+    for row in mycol.find():
+        by_id[row['_id']] = row['name']
         cats = row['categories'].split(', ')
         for cat in cats:
             lcat = cat.lower()
             if lcat not in tags:
                 tags[lcat] = []
-            tags[lcat].append(row['feed_id'])
-            tags['all'].append(row['feed_id'])
+            tags[lcat].append(row['_id'])
+            tags['all'].append(row['_id'])
     
     for key, value in tags.iteritems():
         fg = FeedGenerator()
@@ -58,27 +57,30 @@ def generate_feeds():
         fg.subtitle('Master feed for ' + key + ' podcasts')
         
         sarr = ', '.join([str(a) for a in value])
-        episode_cursor = cnx.cursor(dictionary=True)
-        if(key == 'all'):
-            episode_query = ("SELECT * FROM podcast_episodes ORDER BY addDate DESC LIMIT 300")
-        else:
-            episode_query = ("SELECT * FROM podcast_episodes WHERE feed IN (" + sarr + ")")
-        episode_cursor.execute(episode_query)
         
-        for row in episode_cursor:
+        myclient = pymongo.MongoClient(server_config.mongodbURL)
+        mydb = myclient[server_config.mongodbDB]
+        mycol = mydb["episodes"]
+        
+        feeds = []
+        if (key == 'all'):
+            res = mycol.find().limit(300).sort([('published', -1)])
+        else:
+            for a in value:
+                feeds.append(a)
+            res = mycol.find({"feed":{"$in":feeds}})
+        
+        for row in res:
             fe = fg.add_entry()
-            fe.id(row['id'])
+            fe.id(row['uuid'])
             if(key == 'all'):
                 fe.title(by_id[row['feed']] + ' | ' + remove_control_characters(row['title'].decode('utf-8')))
             else:
                 fe.title(remove_control_characters(row['title'].decode('utf-8')))
-            pub = row['pubDate'].replace(tzinfo=pytz.UTC)
+            pub = datetime.strptime(row['published'], '%Y-%m-%d %H:%M:%S').replace(tzinfo=pytz.UTC)
             fe.pubDate(pub)
             fe.description(remove_control_characters(row['description'].decode('utf-8')))
             fe.enclosure(server_config.public_url + row['file'].replace(server_config.podcast_directory,""),0,'audio/mpeg')
         
         fg.rss_str(pretty=True)
         fg.rss_file(server_config.podcast_directory + ".feeds/" + key + ".xml")
-    
-
-    cnx.close()

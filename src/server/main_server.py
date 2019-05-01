@@ -6,8 +6,9 @@ from jinja2 import Environment, FileSystemLoader
 import logging
 import os.path
 import webapp2
-import mysql.connector
 
+import pymongo
+from bson import ObjectId
 from webapp2_extras import auth
 from webapp2_extras import sessions
 
@@ -226,17 +227,19 @@ class AuthenticatedHandler(BaseHandler):
 class PodcastDisplay(BaseHandler):
     def get(self):
         self.session_store = sessions.get_store(request=self.request)
-        # Connect with the MySQL Server
-        cnx = mysql.connector.connect(user=server_config.mysqlUser, password=server_config.mysqlPassword, database=server_config.mysqlDatabase)
-       
-        feed_cursor = cnx.cursor(dictionary=True)
-        feed_query = "SELECT * FROM podcast_feeds ORDER BY name" # select all of our feeds
-        feed_cursor.execute(feed_query)
+        
+        
+        myclient = pymongo.MongoClient(server_config.mongodbURL)
+        mydb = myclient[server_config.mongodbDB]
+        mycol = mydb["feeds"]
+        
         data = {"title": "Podcast Feeds"}
         feeds = []
         images = []
-        for row in feed_cursor:
+        
+        for row in mycol.find():
             row["slug"] = "/images/" + slugify(row['name'])
+            row["_id"] = str(row['_id'])
             feeds.append(row)
         data["feeds"] = feeds
         data["description"] = "<a href='/podcast/add/" + date.today().strftime('%Y-%m-%d') + "'>Podcasts added to the database today</a>"
@@ -256,23 +259,20 @@ class MasterFeedForward(BaseHandler):
 class FeedDisplay(BaseHandler):
     def get(self, feed_id):
         self.session_store = sessions.get_store(request=self.request)
-        # Connect with the MySQL Server
-        cnx = mysql.connector.connect(user=server_config.mysqlUser, password=server_config.mysqlPassword, database=server_config.mysqlDatabase)
-       
-        feed_cursor = cnx.cursor(dictionary=True)
-        feed_query = "SELECT * FROM podcast_feeds WHERE feed_id = " + feed_id  # select our feed
-        feed_cursor.execute(feed_query)
         
+        myclient = pymongo.MongoClient(server_config.mongodbURL)
+        mydb = myclient[server_config.mongodbDB]
+        mycol = mydb["feeds"]
         data = {}
-        row = feed_cursor.fetchone()
+        row = mycol.find_one({"_id": ObjectId(str(feed_id))})
         if row is not None:
             data["title"] = row["name"]
             data["description"] = row["description"]
-            episode_cursor = cnx.cursor(dictionary=True)
-            episode_query = "SELECT * FROM podcast_episodes WHERE feed = " + feed_id + " ORDER BY pubDate"
-            episode_cursor.execute(episode_query)
+            
+            epcol = mydb["episodes"]
+            
             episodes = []
-            for eprow in episode_cursor:
+            for eprow in epcol.find({"feed": ObjectId(feed_id)}):
                 eprow['file'] = remove_prefix(eprow['file'], server_config.podcast_directory)
                 episodes.append(eprow)
             data["image"] = "/images/" + slugify(row['name'])
@@ -280,7 +280,7 @@ class FeedDisplay(BaseHandler):
             self.render_template('podfeed.html', data)
         else:
             data["title"] = "Error: Feed not found"
-            data["error"] = "There was an issue while retrieving the feed data. The feed probably wasn't added to the database properly. " + feed_query
+            data["error"] = "There was an issue while retrieving the feed data. The feed probably wasn't added to the database properly."
             self.render_template('error.html', data)
 
 
@@ -401,7 +401,7 @@ routes = [
     ('/podcast/feeds', PodcastDisplay),
     ('/podcast/feeds/', PodcastDisplay),
     ('/podcast/masterfeeds/(.*\.xml$)', MasterFeedForward),
-    ('/podcast/feed/(\d+)', FeedDisplay),
+    ('/podcast/feed/(.*)', FeedDisplay),
     webapp2.Route('/<type:v|p>/<user_id:\d+>-<signup_token:.+>',
       handler=VerificationHandler, name='verification'),
     ('/podcast/add/(\d\d\d\d-\d\d-\d\d)', PodcastDateAdded),

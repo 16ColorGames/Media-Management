@@ -12,7 +12,7 @@ name = "pypi"
 [packages]
 
 wget = "*"
-mysql-connector-python = "*"
+pymongo = "*"
 feedparser = "*"
 "pathlib2" = "*"
 python-slugify = "*"

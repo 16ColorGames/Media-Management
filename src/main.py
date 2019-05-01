@@ -11,9 +11,7 @@ import os
 import gaerun
 
 def main():
-    #setupDatabase.setup_sql()
     podcatcher.update_feeds()
-    #podsender.send_updates()
     podfeed.generate_feeds()
     
     
@@ -25,7 +23,7 @@ if __name__ == '__main__':
     sys.setdefaultencoding('utf8')
     logging.info("Started Logging")
     print logging.getLoggerClass().root.handlers
-    gaerun.startup()
+    #gaerun.startup()
     if len(args) == 0:
         main()
     else:
