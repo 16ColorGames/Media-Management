@@ -287,9 +287,10 @@ class FeedDisplay(BaseHandler):
 class PodcastDateAdded(BaseHandler):
     def get(self, day):
         self.session_store = sessions.get_store(request=self.request)
-        # Connect with the MySQL Server
-        cnx = mysql.connector.connect(user=server_config.mysqlUser, password=server_config.mysqlPassword, database=server_config.mysqlDatabase)
-        cnx2 = mysql.connector.connect(user=server_config.mysqlUser, password=server_config.mysqlPassword, database=server_config.mysqlDatabase)
+        
+        myclient = pymongo.MongoClient(server_config.mongodbURL)
+        mydb = myclient[server_config.mongodbDB]
+        epcol = mydb["episodes"]
         
         theday = datetime.strptime(day, "%Y-%m-%d").date()
         
@@ -298,23 +299,12 @@ class PodcastDateAdded(BaseHandler):
         nextday = theday + timedelta(days=1)
         nextdatestr = nextday.strftime('%Y-%m-%d')
        
-       
         data = {}
-        
-        feed_cursor = cnx.cursor(dictionary=True)
-        feed_query = "SELECT * FROM podcast_episodes WHERE addDate BETWEEN '" + day + " 00:00:00' AND '" + day + " 23:59:59'"  # select our feed
-        feed_cursor.execute(feed_query)
         episodes = []
-        for row in feed_cursor:
-            row['file'] = remove_prefix(row['file'], server_config.podcast_directory)
-            name_cursor = cnx2.cursor(dictionary=True)
-            name_query = "SELECT * FROM podcast_feeds WHERE feed_id = " + str(row['feed'])
-            name_cursor.execute(name_query)
-            row['feed_id'] = row['feed']
-            for feed in name_cursor:
-                row['feed'] = feed['name']
-                
-            episodes.append(row)
+        for eprow in epcol.find({'added': {'$lt': unicode(datetime.combine(theday, datetime.max.time())), '$gt': unicode(datetime.combine(theday, datetime.min.time()))} }):
+            eprow['file'] = remove_prefix(eprow['file'], server_config.podcast_directory)
+            eprow['feed_id'] = eprow['feed']
+            episodes.append(eprow)
         
         data["description"] = "<a href='" + prevdatestr + "'>Previous Day</a> Episodes added on " + day + " <a href='" + nextdatestr + "'>Next Day</a>"
         data["episodes"] = episodes
@@ -325,8 +315,10 @@ class PodcastDateAdded(BaseHandler):
 class PodcastDatePublished(BaseHandler):
     def get(self, day):
         self.session_store = sessions.get_store(request=self.request)
-        # Connect with the MySQL Server
-        cnx = mysql.connector.connect(user=server_config.mysqlUser, password=server_config.mysqlPassword, database=server_config.mysqlDatabase)
+        
+        myclient = pymongo.MongoClient(server_config.mongodbURL)
+        mydb = myclient[server_config.mongodbDB]
+        epcol = mydb["episodes"]
         
         theday = datetime.strptime(day, "%Y-%m-%d").date()
         
@@ -335,17 +327,14 @@ class PodcastDatePublished(BaseHandler):
         nextday = theday + timedelta(days=1)
         nextdatestr = nextday.strftime('%Y-%m-%d')
        
-       
-        feed_cursor = cnx.cursor(dictionary=True)
-        feed_query = "SELECT * FROM podcast_episodes WHERE pubDate BETWEEN '" + day + " 00:00:00' AND '" + day + " 23:59:59'"  # select our feed
-        feed_cursor.execute(feed_query)
-        episodes = []
-        for row in feed_cursor:
-            row['file'] = remove_prefix(row['file'], server_config.podcast_directory)
-            episodes.append(row)
-        
         data = {}
-        data["description"] = "<a href='" + prevdatestr + "'>Previous Day</a> Episodes added on " + day + " <a href='" + nextdatestr + "'>Next Day</a>"
+        episodes = []
+        for eprow in epcol.find({'published': {'$lt': unicode(datetime.combine(theday, datetime.max.time())), '$gt': unicode(datetime.combine(theday, datetime.min.time()))} }):
+            eprow['file'] = remove_prefix(eprow['file'], server_config.podcast_directory)
+            eprow['feed_id'] = eprow['feed']
+            episodes.append(eprow)
+        
+        data["description"] = "<a href='" + prevdatestr + "'>Previous Day</a> Episodes Published on " + day + " <a href='" + nextdatestr + "'>Next Day</a>"
         data["episodes"] = episodes
         data["title"] = "Episodes published on " + day
         self.render_template('multi_episode_display.html', data)

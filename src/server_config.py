@@ -1,4 +1,4 @@
-host = "192.168.1.149"
+host = "192.168.1.144"
 port = "3000"
 mongodbURL = "mongodb://localhost:27017/"
 mongodbDB = "media-management"
@@ -6,3 +6,4 @@ logfile="mainlogging.log"
 podcast_directory="/media/Data2/podcast/"
 hashMethod="md5"
 public_url="allenodden.com:3000/"
+update_freq = 12

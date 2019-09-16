@@ -1,2 +1,2 @@
 cd ./src
-~/.local/bin/pipenv run python main.py server
+~/.local/bin/pipenv run python main.py
