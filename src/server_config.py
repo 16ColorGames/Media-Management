@@ -7,3 +7,5 @@ podcast_directory="/media/Data2/podcast/"
 hashMethod="md5"
 public_url="allenodden.com:3000/"
 update_freq = 12
+valid_formats=set(['.mp4'])
+omdb_api_key="41b03d52"

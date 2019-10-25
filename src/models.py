@@ -2,9 +2,9 @@ import time
 import webapp2_extras.appengine.auth.models
 import server_config
 import logging
+import pymongo
 from webapp2_extras import security
 from webapp2_extras import auth
-import mysql.connector
 
 class User(object):
     def __init__(self, id, username, friendly):
@@ -44,13 +44,13 @@ class User(object):
         :raises:
             ``auth.InvalidAuthIdError`` or ``auth.InvalidPasswordError``.
         """
-        cnx = mysql.connector.connect(user=server_config.mysqlUser, password=server_config.mysqlPassword, database=server_config.mysqlDatabase)
-        user_cursor = cnx.cursor(dictionary=True)
-        user_query = "SELECT * FROM users WHERE `email` = %s;"
-        user_cursor.execute(user_query, [auth_id])
-        user_result = user_cursor.fetchone()
+        myclient = pymongo.MongoClient(server_config.mongodbURL)
+        mydb = myclient[server_config.mongodbDB]
+        mycol = mydb["users"]
         
-        if not user_result:
+        user_result = mycol.find_one({"email": auth_id})
+        
+        if user_result is None:
             raise auth.InvalidAuthIdError()
         
         if not security.check_password_hash(password, user_result['password']):
@@ -109,21 +109,17 @@ class User(object):
             user_values['password'] = security.generate_password_hash(
                 user_values.pop('password_raw'), length=12)
         
-        cnx = mysql.connector.connect(user=server_config.mysqlUser, password=server_config.mysqlPassword, database=server_config.mysqlDatabase)
-        user_cursor = cnx.cursor(dictionary=True)
-        user_query = "SELECT * FROM users WHERE `email` = %s;"
-        user_cursor.execute(user_query, [user_values['email_address']])
-        user_result = user_cursor.fetchone()
+        
+        myclient = pymongo.MongoClient(server_config.mongodbURL)
+        mydb = myclient[server_config.mongodbDB]
+        mycol = mydb["users"]
+        
+        user_result = mycol.find_one({"email": user_values['email_address']})
+        
         if user_result is None:
-            user_cursor.close()
             verify = security.generate_random_string(length=12, pool='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789')
-            insert_query = "INSERT INTO `users` (`user_id`, `password`, `email`, `activation_key`, `friendly_name`) VALUES (NULL, %s, %s, %s, %s)"
-            insert_cursor = cnx.cursor(dictionary=True,buffered=True)   
-            insert_cursor.execute(insert_query, [user_values['password'], user_values['email_address'], verify, user_values['friendly']])
-            logging.info(insert_cursor.statement)
-            cnx.commit()
-            insert_cursor.close()
-            cnx.close()
+            user_dict = {"user_id": None, "password": user_values['password'], "email": user_values['email_address'], "activation_key": verify, "friendly_name": user_values['friendly']}
+            mycol.insert_one(user_dict)
             return True, verify
         else:
             return False, "Email"

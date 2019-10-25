@@ -16,15 +16,21 @@
 </head>
 
 <body>
-<div id="login">
+<div class="topnav">
+	<a href="/">Home</a>
+	<a href="/podcast">Podcast Feeds</a>
+	
 	{% if user.name %}
-	Logged in as {{ user.name }}. <a href="/logout">Log Out</a>
+	<a href="/genres">Genres</a>
+	<a href="/logout">Log Out</a>
 	{% else %}
-	<a href="/login">Log In</a> or <a href="/signup">Register</a>
+	<a href="/login">Log In</a>
 	{% endif %}
 </div>
-<div class="topnav">
-	<a href="/podcast">Podcast Feeds</a>
+<div id="login">
+	{% if user.name %}
+	Logged in as {{ user.name }}.
+	{% endif %}
 </div>
 <div id="content">
 {% block content %}{% endblock %}

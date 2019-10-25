@@ -1,0 +1,6 @@
+{% extends "layout.html" %}
+{% block content %}
+	{% for n in genres %}
+	<a href='/tags/{{n['_id']}}'>{{n['Name']}}</a></br>
+	{% endfor %}
+{% endblock %}

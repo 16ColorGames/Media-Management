@@ -255,6 +255,43 @@ class MasterFeedForward(BaseHandler):
             data['feed'] = f.read()
         self.render_template('xml_feed.html', data)
 
+class GenreDisplay(BaseHandler):
+    @user_required
+    def get(self):
+        self.session_store = sessions.get_store(request=self.request)
+        data = {"title": "Genres"}
+        
+        myclient = pymongo.MongoClient(server_config.mongodbURL)
+        mydb = myclient[server_config.mongodbDB]
+        mycol = mydb["tags"]
+        
+        genres = []
+        
+        for row in mycol.find({"Type":"Genre"}).sort([("Name", 1)]):
+            row["_id"] = str(row['_id'])
+            genres.append(row)
+        
+        data["genres"] = genres
+        
+        self.render_template('genres.html', data)
+        
+class TagListDisplay(BaseHandler):
+    @user_required
+    def get(self, tag_id):
+        self.session_store = sessions.get_store(request=self.request)
+        
+        myclient = pymongo.MongoClient(server_config.mongodbURL)
+        mydb = myclient[server_config.mongodbDB]
+        mycol = mydb["items"]
+        tagcol = mydb["tags"]
+        data = {}
+        data["title"]=tagcol.find_one({"_id":ObjectId(str(tag_id))})["Name"];
+        items = []
+        for row in mycol.find({"Tags": ObjectId(str(tag_id))}).sort([("Name", 1)]):
+            items.append(row)
+        data["items"] = items
+        self.render_template('tag_list.html', data);
+        
 
 class FeedDisplay(BaseHandler):
     def get(self, feed_id):
@@ -383,6 +420,7 @@ routes = [
     webapp2.Route('/', MainPage, name='home'),
     ('/signup', SignupHandler),
     webapp2.Route('/login', LoginHandler, name='login'),
+    ('/genres', GenreDisplay),
     ('/podcast', PodcastDisplay),
     webapp2.Route('/logout', LogoutHandler, name='logout'),
     webapp2.Route('/forgot', ForgotPasswordHandler, name='forgot'),
@@ -391,6 +429,7 @@ routes = [
     ('/podcast/feeds/', PodcastDisplay),
     ('/podcast/masterfeeds/(.*\.xml$)', MasterFeedForward),
     ('/podcast/feed/(.*)', FeedDisplay),
+    ('/tags/(.*)', TagListDisplay),
     webapp2.Route('/<type:v|p>/<user_id:\d+>-<signup_token:.+>',
       handler=VerificationHandler, name='verification'),
     ('/podcast/add/(\d\d\d\d-\d\d-\d\d)', PodcastDateAdded),
