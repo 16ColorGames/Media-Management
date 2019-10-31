@@ -22,6 +22,9 @@
 	
 	{% if user.name %}
 	<a href="/genres">Genres</a>
+	{% if user.level > 900 %}
+	<a href="/admin/approval">Approval Needed</a>
+	{% endif %}
 	<a href="/logout">Log Out</a>
 	{% else %}
 	<a href="/login">Log In</a>

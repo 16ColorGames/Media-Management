@@ -8,7 +8,7 @@
 <div id="items">
    {% for n in items %}
    <div id = "item">
-      <h3 id="title"><a id="{{n['Title']}}"></a>{{n['Title']}}<a href="{{n['File']}}" class="material-icons">get_app</a><a href="#" id="play" data-value="{{n['file']}}" data-title="{{n['title']}}" class="material-icons">playlist_play</a></h3>
+      <h3 id="title"><a id="{{n['Title']}}"></a>{{n['Title']}}<a href="/items/{{n['_id']}}" class="material-icons">get_app</a><a href="#" id="play" data-value="{{n['file']}}" data-title="{{n['title']}}" class="material-icons">playlist_play</a></h3>
       <p>{{n['Description']}}</p>
    </div>
    {% endfor %}

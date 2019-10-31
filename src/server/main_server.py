@@ -24,7 +24,7 @@ from slugify import slugify
 from datetime import datetime, date, timedelta
 from google.appengine.api import users
 
-
+  
 def user_required(handler):
   """
     Decorator that checks if there's a user associated with the current session.
@@ -216,12 +216,71 @@ class LoginHandler(BaseHandler):
       'failed': failed
     }
     self.render_template('login.html', params)
+    
+
+class ApproveIDHandler(BaseHandler):
+  def get(self):
+    self._serve_page()
+  
+  @user_required
+  def post(self, item_id):
+    TMDBid = self.request.get('Correct Id')
+    myclient = pymongo.MongoClient(server_config.mongodbURL)
+    mydb = myclient[server_config.mongodbDB]
+    itemcol = mydb["items"]
+    tagcol = mydb["tags"]
+    recol = mydb["requests"]
+    
+    item = itemcol.find_one({"_id":ObjectId(str(item_id))})
+    
+    if item is not None:
+        itemcol.delete_one({"_id":ObjectId(str(item_id))})
+        try:
+            item["tags"].remove(tagcol.find_one({"Name":"Unprocessed","Type":"Admin"}).get("_id"))
+        except ValueError:
+            pass
+        item["tags"].append(tagcol.find_one({"Name":"Approved","Type":"Admin"}).get("_id"))
+        item["TMDBid"] = TMDBid
+        itemcol.insert_one(item)
+        recol.insert_one({"Object":"Item", "Id": item.get("_id"), "Type":"Full"})
+        recol.insert_one({"Object":"Item", "Id": item.get("_id"), "Type":"Cast"})
+    
+    self.display_message(item_id + ": " + id)
+    
+
+  def _serve_page(self, failed=False):
+    username = self.request.get('username')
+    params = {
+      'username': username,
+      'failed': failed
+    }
+    self.render_template('login.html', params)
 
     
 class AuthenticatedHandler(BaseHandler):
   @user_required
   def get(self):
     self.render_template('authenticated.html')
+
+class ApprovalDisplay(BaseHandler):
+  @user_required
+  def get(self):
+    self.session_store = sessions.get_store(request=self.request)
+    
+    if self.auth.get_user_by_session()["level"] < 500:
+        self.redirect(self.uri_for('login'), abort=True)
+    
+    myclient = pymongo.MongoClient(server_config.mongodbURL)
+    mydb = myclient[server_config.mongodbDB]
+    mycol = mydb["items"]
+    tagcol = mydb["tags"]
+    data = {}
+    tag_id=tagcol.find_one({"Type":"Admin", "Name": "Automatic"})["_id"];
+    items = []
+    for row in mycol.find({"Tags": tag_id}).sort([("Name", 1)]):
+        items.append(row)
+    data["items"] = items
+    self.render_template('approval.html', data)
     
       
 class PodcastDisplay(BaseHandler):
@@ -421,6 +480,7 @@ routes = [
     ('/signup', SignupHandler),
     webapp2.Route('/login', LoginHandler, name='login'),
     ('/genres', GenreDisplay),
+    ('/admin/approval', ApprovalDisplay),
     ('/podcast', PodcastDisplay),
     webapp2.Route('/logout', LogoutHandler, name='logout'),
     webapp2.Route('/forgot', ForgotPasswordHandler, name='forgot'),
@@ -429,6 +489,7 @@ routes = [
     ('/podcast/feeds/', PodcastDisplay),
     ('/podcast/masterfeeds/(.*\.xml$)', MasterFeedForward),
     ('/podcast/feed/(.*)', FeedDisplay),
+    ('/admin/approval/(.*)', ApproveIDHandler),
     ('/tags/(.*)', TagListDisplay),
     webapp2.Route('/<type:v|p>/<user_id:\d+>-<signup_token:.+>',
       handler=VerificationHandler, name='verification'),
@@ -439,7 +500,7 @@ routes = [
 config = {
     'webapp2_extras.auth': {
         'user_model': 'models.User',
-        'user_attributes': ['name']
+        'user_attributes': ['name', 'level']
     },
     'webapp2_extras.sessions': {
         'secret_key': 'some_secret_key'

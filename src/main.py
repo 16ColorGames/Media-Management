@@ -18,7 +18,10 @@ def update():
     podcatcher.update_feeds()
     podfeed.generate_feeds()
     media.search_locations()
-    
+
+def fast_update():
+    media.process_requests()
+
 def server_thread():
     logging.info("Starting server thread")
     server.start()
@@ -26,6 +29,7 @@ def server_thread():
 def update_thread():
     logging.info("Starting update thread")
     schedule.every(server_config.update_freq).hours.do(update)
+    schedule.every(1).minutes.do(fast_update)
     update()
     #podcatcher.update_descriptions()
     while True:

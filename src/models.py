@@ -7,11 +7,16 @@ from webapp2_extras import security
 from webapp2_extras import auth
 
 class User(object):
-    def __init__(self, id, username, friendly):
+    def __init__(self, id, username, friendly, level):
         self.id = id
         self.name=friendly
         self.username = username
         self.friendly = friendly
+        self.level = level
+        
+    def get_level(self):
+        """Returns this users access level"""
+        return self.level
     
     def get_id(self):
         """Returns this user's unique ID, which can be an integer or string."""
@@ -56,7 +61,7 @@ class User(object):
         if not security.check_password_hash(password, user_result['password']):
             raise auth.InvalidPasswordError()
             
-        return User(user_result['user_id'], auth_id, user_result['friendly_name'])
+        return User(user_result['user_id'], auth_id, user_result['friendly_name'], user_result['level'])
 
     @classmethod
     def create_auth_token(cls, user_id):
@@ -118,7 +123,7 @@ class User(object):
         
         if user_result is None:
             verify = security.generate_random_string(length=12, pool='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789')
-            user_dict = {"user_id": None, "password": user_values['password'], "email": user_values['email_address'], "activation_key": verify, "friendly_name": user_values['friendly']}
+            user_dict = {"user_id": None, "password": user_values['password'], "email": user_values['email_address'], "activation_key": verify, "friendly_name": user_values['friendly'], "level": 5}
             mycol.insert_one(user_dict)
             return True, verify
         else:

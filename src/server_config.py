@@ -9,3 +9,4 @@ public_url="allenodden.com:3000/"
 update_freq = 12
 valid_formats=set(['.mp4'])
 omdb_api_key="41b03d52"
+tmdb_api_key="f6bd687ffa63cd282b6ff2c6877f2669"

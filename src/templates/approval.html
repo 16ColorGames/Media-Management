@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+{% block content %}
+<div>
+   <h1>{{ title }}</h1>
+</div>
+<div style="width:100%;text-align:center;clear:both;font-size:.75em;font-style:italic;">
+</div>
+<div id="items">
+   {% for n in items %}
+   <div id = "item">
+      <h3 id="title"><a id="{{n['Title']}}"></a><a href="https://www.themoviedb.org/movie/{{n['TMDBid']}}">{{n['Title']}}</a><br>{{n['File']}}</h3>
+	  <form class="form" action= "/admin/approval/{{n['_id']}}" method="POST">
+		<label for="Correct ID">Correct Id</label>
+		<input type="Correct Id" value="{{n['TMDBid']}}" name="Correct Id"/>
+		<button type="submit" class="btn">Submit</button>
+	  </form>
+   </div>
+   {% endfor %}
+</div>
+{% include 'audioplayer.html' %}
+{% endblock %}
