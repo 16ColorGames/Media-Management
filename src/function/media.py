@@ -20,27 +20,31 @@ def process_item_full_request(request):
     
     itemcol.delete_one({"_id": request["Id"]})
     
-    url = "https://api.themoviedb.org/3/movie/" + item["TMDBid"] + "?api_key=" + +server_config.tmdb_api_key+"&language=en-US"
+    url = "https://api.themoviedb.org/3/movie/" + item["TMDBid"] + "?api_key=" + server_config.tmdb_api_key+"&language=en-US"
     response = urllib.urlopen(url)
     data = json.loads(response.read())
     
     item["Title"] = data["title"]
     item["IMDBid"] = data["imdb_id"]
     
-    if item["Companies"] is None:
+    if "Companies" not in item:
         item["Companies"] = []
     
     for genre in data["genres"]:
         gtag = tagcol.find_one({"Type":"Genre", "Name": genre["name"]})
         if gtag is None:
-            gtag = tagcol.insert_one({"Type":"Genre", "Name": genre["name"})
-        item["Tags"].append(gtag["_id"])
+            gid = tagcol.insert_one({"Type":"Genre", "Name": genre["name"]}).inserted_id
+        else:
+            gid = gtag["_id"]
+        item["Tags"].append(gid)
     
     for company in data["production_companies"]:
         ctag = entitycol.find_one({"TMDBid": company["id"], "Type":"Company"})
         if ctag is None:
-            ctag = entitycol.insert_one({"TMDBid":company["id"],"Type":"Company","Name":company["name"]})
-        item["Companies"].append(ctag["_id"])
+            cid = entitycol.insert_one({"TMDBid":company["id"],"Type":"Company","Name":company["name"]}).inserted_id
+        else:
+            cid = ctag["_id"]
+        item["Companies"].append(cid)
   
     itemcol.insert_one(item)
     
@@ -71,14 +75,19 @@ def process_item_basic_request(request):
         url = url + name.rstrip().replace(' ', '%20')
     response = urllib.urlopen(url)
     data = json.loads(response.read())
-    first = data["results"][0]
     
-    tags = [tagcol.find_one({"Name":"Automatic","Type":"Admin"}).get("_id")]
-    item["Tags"] = tags
-    item["Title"] = first["title"]
-    item["TMDBid"] = first["id"]
-    
-    itemcol.insert_one(item)    
+    try:
+        first = data["results"][0]
+        
+        tags = [tagcol.find_one({"Name":"Automatic","Type":"Admin"}).get("_id")]
+        item["Tags"] = tags
+        item["Title"] = first["title"]
+        item["TMDBid"] = first["id"]
+        
+        itemcol.insert_one(item)
+    except IndexError:
+        print("Search failed for " + item["File"])
+        pass
 
 def process_requests():
     myclient = pymongo.MongoClient(server_config.mongodbURL)
@@ -90,7 +99,7 @@ def process_requests():
             if request["Type"] == "Basic":
                 process_item_basic_request(request)
                 reqcol.delete_one({"_id": request["_id"]})
-            elif requests["Type"] == "Full":
+            elif request["Type"] == "Full":
                 process_item_full_request(request)
                 reqcol.delete_one({"_id": request["_id"]})
 

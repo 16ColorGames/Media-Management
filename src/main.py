@@ -29,7 +29,8 @@ def server_thread():
 def update_thread():
     logging.info("Starting update thread")
     schedule.every(server_config.update_freq).hours.do(update)
-    schedule.every(1).minutes.do(fast_update)
+    schedule.every(15).seconds.do(fast_update)
+    
     update()
     #podcatcher.update_descriptions()
     while True:

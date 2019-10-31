@@ -236,16 +236,16 @@ class ApproveIDHandler(BaseHandler):
     if item is not None:
         itemcol.delete_one({"_id":ObjectId(str(item_id))})
         try:
-            item["tags"].remove(tagcol.find_one({"Name":"Unprocessed","Type":"Admin"}).get("_id"))
+            item["Tags"].remove(tagcol.find_one({"Name":"Unprocessed","Type":"Admin"}).get("_id"))
         except ValueError:
             pass
-        item["tags"].append(tagcol.find_one({"Name":"Approved","Type":"Admin"}).get("_id"))
+        item["Tags"].append(tagcol.find_one({"Name":"Approved","Type":"Admin"}).get("_id"))
         item["TMDBid"] = TMDBid
         itemcol.insert_one(item)
         recol.insert_one({"Object":"Item", "Id": item.get("_id"), "Type":"Full"})
         recol.insert_one({"Object":"Item", "Id": item.get("_id"), "Type":"Cast"})
     
-    self.display_message(item_id + ": " + id)
+    self.display_message(item_id + ": " + TMDBid)
     
 
   def _serve_page(self, failed=False):
