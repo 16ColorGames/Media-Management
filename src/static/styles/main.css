@@ -27,6 +27,15 @@
     background-color: #ddd;
     color: black;
 }
+.topnav-extra {
+	
+    float: right;
+    color: #f2f2f2;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+    font-size: 17px;
+}
 .audiomedia {	
     background-color: #333;
     overflow: hidden;    
@@ -44,6 +53,36 @@
     text-decoration: none;
     font-size: 17px;
 }
+
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  justify-content: space-evenly;
+  text-align: center;
+  grid-row-gap: 1em;
+  grid-column-gap: 1em;
+}
+
+.main-poster {
+	float: left;
+}
+
+.grid-item {
+	display: flex;
+	flex-direction: column;
+}
+
+.grid-item a{
+	color: #333;
+	text-decoration: none;
+	font-weight: bold;
+	font-size: 1.5em;
+}
+
+.grid-item :hover {
+    background-color: #ddd;
+}
+
 body {
     margin-top: 50px; /* Add a top margin to avoid content overlay */
 }

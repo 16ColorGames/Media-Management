@@ -1,17 +1,11 @@
 {% extends "layout.html" %}
 {% block content %}
 <div>
-   <h1>{{ title }}</h1>
+   <h1 style="text-align: center;">{{ title }}</h1>
 </div>
-<div style="width:100%;text-align:center;clear:both;font-size:.75em;font-style:italic;">
-</div>
-<div id="items">
+<div class="grid-container">
    {% for n in items %}
-   <div id = "item">
-      <h3 id="title"><a id="{{n['Title']}}"></a>{{n['Title']}}<a href="/items/{{n['_id']}}" class="material-icons">get_app</a><a href="#" id="play" data-value="{{n['file']}}" data-title="{{n['title']}}" class="material-icons">playlist_play</a></h3>
-      <p>{{n['Description']}}</p>
-   </div>
+      {% include "item_display.html" %}
    {% endfor %}
 </div>
-{% include 'audioplayer.html' %}
 {% endblock %}

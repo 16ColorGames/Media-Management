@@ -2,6 +2,7 @@ import sys
 import os
 import pymongo
 import server_config
+import wget
 import json
 import urllib
 import re
@@ -18,6 +19,13 @@ def process_person_full_request(request):
     url = "https://api.themoviedb.org/3/person/" + str(person["TMDBid"]) + "?api_key=" + server_config.tmdb_api_key+"&language=en-US"
     response = urllib.urlopen(url)
     data = json.loads(response.read())
+    
+    if "profile_path" in data:
+        if data["profile_path"] is not None:
+            name, ext = os.path.splitext(data["profile_path"])
+            profile = urllib.urlopen("https://image.tmdb.org/t/p/original/" + data["profile_path"]).read()
+            with open(server_config.storage_directory+"images/"+ str(person["_id"]) + "-profile"+ext, 'wb') as f:
+                f.write(profile)
     
     entitycol.update_one({"_id": request["Id"]},{"$set":{"Bio": data["biography"], "Birthday": data.get("birthday", "unknown"), "IMDBid": data["imdb_id"]}})
     
@@ -81,6 +89,11 @@ def process_item_full_request(request):
     
     item["Title"] = data["title"]
     item["IMDBid"] = data["imdb_id"]
+    item["Released"] = data["release_date"]
+    item["Description"] = data["overview"]
+    item["Tagline"] = data["tagline"]
+    
+    item["Tags"].append(tagcol.find_one({"Type":"Category", "Name": "Movie"}))
     
     for genre in data["genres"]:
         gtag = tagcol.find_one({"Type":"Genre", "Name": genre["name"]})
@@ -95,7 +108,19 @@ def process_item_full_request(request):
             entitycol.insert_one({"TMDBid":company["id"],"Type":"Company","Name":company["name"]})
             ctag = entitycol.find_one({"TMDBid": company["id"], "Type":"Company"})
         relcol.update_one({"ItemId": item["_id"], "EntityId": ctag["_id"]}, {"$set":{"ItemId": item["_id"], "EntityId": ctag["_id"],"Relation": "Production"}},True)
-  
+    
+    if "poster_path" in data:
+        name, ext = os.path.splitext(data["poster_path"])
+        poster = urllib.urlopen("https://image.tmdb.org/t/p/original/" + data["poster_path"]).read()
+        with open(server_config.storage_directory +"images/"+ str(item["_id"]) + "-poster"+ext, 'wb') as f:
+            f.write(poster)
+        
+    if "backdrop_path" in data:
+        name, ext = os.path.splitext(data["backdrop_path"])
+        backdrop = urllib.urlopen("https://image.tmdb.org/t/p/original/" + data["backdrop_path"]).read()
+        with open(server_config.storage_directory+"images/"+ str(item["_id"]) + "-backdrop"+ext, 'wb') as f:
+            f.write(backdrop)
+       
     itemcol.insert_one(item)
     
 

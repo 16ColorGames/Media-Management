@@ -305,8 +305,6 @@ class PodcastDisplay(BaseHandler):
         self.render_template('podlist.html', data)
         
         
-
-        
 class MasterFeedForward(BaseHandler):
     def get(self, xml):
         data = {}
@@ -374,6 +372,21 @@ class FeedDisplay(BaseHandler):
             data["image"] = "/images/" + slugify(row['name'])
             data["episodes"] = episodes
             self.render_template('podfeed.html', data)
+        else:
+            data["title"] = "Error: Feed not found"
+            data["error"] = "There was an issue while retrieving the feed data. The feed probably wasn't added to the database properly."
+            self.render_template('error.html', data)
+
+class ItemDisplay(BaseHandler):
+    def get(self, item_id):
+        self.session_store = sessions.get_store(request=self.request)
+        
+        myclient = pymongo.MongoClient(server_config.mongodbURL)
+        mydb = myclient[server_config.mongodbDB]
+        mycol = mydb["items"]
+        row = mycol.find_one({"_id": ObjectId(str(item_id))})
+        if row is not None:
+            self.render_template('item.html', row)
         else:
             data["title"] = "Error: Feed not found"
             data["error"] = "There was an issue while retrieving the feed data. The feed probably wasn't added to the database properly."
@@ -490,6 +503,7 @@ routes = [
     ('/podcast/masterfeeds/(.*\.xml$)', MasterFeedForward),
     ('/podcast/feed/(.*)', FeedDisplay),
     ('/admin/approval/(.*)', ApproveIDHandler),
+    ('/items/(.*)', ItemDisplay),
     ('/tags/(.*)', TagListDisplay),
     webapp2.Route('/<type:v|p>/<user_id:\d+>-<signup_token:.+>',
       handler=VerificationHandler, name='verification'),
@@ -512,8 +526,9 @@ web_app = webapp2.WSGIApplication(routes, debug=True, config=config)
 # Choose a directory separate from your source (e.g., "./static/") so it isn't dl'able
 static_app = StaticURLParser("./static")
 podcast_app = StaticURLParser(server_config.podcast_directory)
+images_app = StaticURLParser(server_config.storage_directory)
 
-app = Cascade([static_app, podcast_app, web_app])
+app = Cascade([static_app, podcast_app, web_app, images_app])
 
 def start():
     print("Starting Server")

@@ -26,13 +26,9 @@
 	<a href="/admin/approval">Approval Needed</a>
 	{% endif %}
 	<a href="/logout">Log Out</a>
+	<div class="topnav-extra">Hello, {{ user.name }}</div>
 	{% else %}
 	<a href="/login">Log In</a>
-	{% endif %}
-</div>
-<div id="login">
-	{% if user.name %}
-	Logged in as {{ user.name }}.
 	{% endif %}
 </div>
 <div id="content">

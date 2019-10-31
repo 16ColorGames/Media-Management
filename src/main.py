@@ -32,7 +32,7 @@ def update_thread():
     schedule.every(15).seconds.do(fast_update)
     
     media.search_locations()
-    update()
+    #update()
     #podcatcher.update_descriptions()
     while True:
         schedule.run_pending()
