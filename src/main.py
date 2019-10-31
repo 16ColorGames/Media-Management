@@ -31,6 +31,7 @@ def update_thread():
     schedule.every(server_config.update_freq).hours.do(update)
     schedule.every(15).seconds.do(fast_update)
     
+    media.search_locations()
     update()
     #podcatcher.update_descriptions()
     while True:

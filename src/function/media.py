@@ -6,12 +6,67 @@ import json
 import urllib
 import re
 
+def process_person_full_request(request):
+    myclient = pymongo.MongoClient(server_config.mongodbURL)
+    mydb = myclient[server_config.mongodbDB]
+    entitycol = mydb["entities"]
+    person = entitycol.find_one({"_id": request["Id"]})
+    
+    if person is None:
+        return
+    
+    url = "https://api.themoviedb.org/3/person/" + str(person["TMDBid"]) + "?api_key=" + server_config.tmdb_api_key+"&language=en-US"
+    response = urllib.urlopen(url)
+    data = json.loads(response.read())
+    
+    entitycol.update_one({"_id": request["Id"]},{"$set":{"Bio": data["biography"], "Birthday": data.get("birthday", "unknown"), "IMDBid": data["imdb_id"]}})
+    
+    
+
+def process_item_cast_request(request):
+    myclient = pymongo.MongoClient(server_config.mongodbURL)
+    mydb = myclient[server_config.mongodbDB]
+    itemcol = mydb["items"]
+    entitycol = mydb["entities"]
+    relcol = mydb["relations"]
+    reqcol = mydb["requests"]
+    
+    item = itemcol.find_one({"_id": request["Id"]})
+    
+    if item is None:
+        return
+    
+    itemcol.delete_one({"_id": request["Id"]})
+    
+    url = "https://api.themoviedb.org/3/movie/" + str(item["TMDBid"]) + "/credits?api_key=" + server_config.tmdb_api_key+"&language=en-US"
+    response = urllib.urlopen(url)
+    data = json.loads(response.read())
+
+    for cast in data["cast"]:
+        ctag = entitycol.find_one({"TMDBid": cast["id"], "Type":"Person"})
+        if ctag is None:
+            entitycol.insert_one({"TMDBid":cast["id"],"Type":"Person","Name":cast["name"]})
+            ctag = entitycol.find_one({"TMDBid": cast["id"], "Type":"Person"})
+            reqcol.insert_one({"Object":"Entity", "Id": ctag["_id"], "Type":"Full", "Spec":"Person"})
+        relcol.update_one({"ItemId": item["_id"], "EntityId": ctag["_id"]},{"$set": {"ItemId": item["_id"], "EntityId": ctag["_id"],"Relation": "Actor", "Character": cast["character"]}},True)
+ 
+    for crew in data["crew"]:
+        ctag = entitycol.find_one({"TMDBid": cast["id"], "Type":"Person"})
+        if ctag is None:
+            entitycol.insert_one({"TMDBid":cast["id"],"Type":"Person","Name":cast["name"]})
+            ctag = entitycol.find_one({"TMDBid": cast["id"], "Type":"Person"})
+            reqcol.insert_one({"Object":"Entity", "Id": ctag["_id"], "Type":"Full", "Spec":"Person"})
+        relcol.update_one({"ItemId": item["_id"], "EntityId": ctag["_id"]}, {"$set":{"ItemId": item["_id"], "EntityId": ctag["_id"],"Relation": "Crew", "Job": cast.get("job", "")}},True)
+ 
+    itemcol.insert_one(item)
+
 def process_item_full_request(request):
     myclient = pymongo.MongoClient(server_config.mongodbURL)
     mydb = myclient[server_config.mongodbDB]
     itemcol = mydb["items"]
     tagcol = mydb["tags"]
     entitycol = mydb["entities"]
+    relcol = mydb["relations"]
     
     item = itemcol.find_one({"_id": request["Id"]})
     
@@ -27,24 +82,19 @@ def process_item_full_request(request):
     item["Title"] = data["title"]
     item["IMDBid"] = data["imdb_id"]
     
-    if "Companies" not in item:
-        item["Companies"] = []
-    
     for genre in data["genres"]:
         gtag = tagcol.find_one({"Type":"Genre", "Name": genre["name"]})
         if gtag is None:
-            gid = tagcol.insert_one({"Type":"Genre", "Name": genre["name"]}).inserted_id
-        else:
-            gid = gtag["_id"]
-        item["Tags"].append(gid)
+            tagcol.insert_one({"Type":"Genre", "Name": genre["name"]})
+            gtag = tagcol.find_one({"Type":"Genre", "Name": genre["name"]})
+        item["Tags"].append(gtag["_id"])
     
     for company in data["production_companies"]:
         ctag = entitycol.find_one({"TMDBid": company["id"], "Type":"Company"})
         if ctag is None:
-            cid = entitycol.insert_one({"TMDBid":company["id"],"Type":"Company","Name":company["name"]}).inserted_id
-        else:
-            cid = ctag["_id"]
-        item["Companies"].append(cid)
+            entitycol.insert_one({"TMDBid":company["id"],"Type":"Company","Name":company["name"]})
+            ctag = entitycol.find_one({"TMDBid": company["id"], "Type":"Company"})
+        relcol.update_one({"ItemId": item["_id"], "EntityId": ctag["_id"]}, {"$set":{"ItemId": item["_id"], "EntityId": ctag["_id"],"Relation": "Production"}},True)
   
     itemcol.insert_one(item)
     
@@ -102,6 +152,14 @@ def process_requests():
             elif request["Type"] == "Full":
                 process_item_full_request(request)
                 reqcol.delete_one({"_id": request["_id"]})
+            elif request["Type"] == "Cast":
+                process_item_cast_request(request)
+                reqcol.delete_one({"_id": request["_id"]})
+        elif request["Object"] == "Entity":
+            if request["Type"] == "Full":
+                if request["Spec"] == "Person":
+                    process_person_full_request(request)
+                    reqcol.delete_one({"_id": request["_id"]})
 
 def add_new(file, name):
     myclient = pymongo.MongoClient(server_config.mongodbURL)
