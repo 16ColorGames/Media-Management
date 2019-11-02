@@ -1,5 +1,17 @@
 {% extends "layout.html" %}
 {% block content %}
-	<img src="/images/{{_id}}-poster.jpg" height="300" width="200" class="main-poster">
+<div>
+	<img src="/images/{{_id}}-poster.jpg" height="450" width="300" class="main-poster">
 	<h1>{{Title}}</h1>
+	<p>{{Description}}</p>
+	</div>
+	<div class="grid-container">
+   {% for n in actors %}
+		<div class="grid-item">
+		  <a href="/entities/{{n['id']}}">
+		  <img src="/images/{{n['id']}}-profile.jpg" height="300" width="200"></br>
+		  <span class="actor-name">{{n['Name']}}</span></br><span class="character-name">as {{n['Character']}}</span></a>
+		</div>
+   {% endfor %}
+   </div>
 {% endblock %}

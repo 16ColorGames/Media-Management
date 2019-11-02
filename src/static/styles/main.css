@@ -36,6 +36,7 @@
     text-decoration: none;
     font-size: 17px;
 }
+
 .audiomedia {	
     background-color: #333;
     overflow: hidden;    
@@ -54,16 +55,35 @@
     font-size: 17px;
 }
 
-.grid-container {
+.grid-container, .grid-container-small{
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
   justify-content: space-evenly;
   text-align: center;
   grid-row-gap: 1em;
   grid-column-gap: 1em;
+  clear: both;
 }
 
-.main-poster {
+.grid-container {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+
+.grid-container-small {
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+}
+
+.character-name {
+    font-size: 14px;
+	font-weight: normal;
+	font-style: italic;
+}
+
+.actor-name {
+	font-size: 16;
+	font-weight: normal;
+}
+
+.main-poster, .main-profile {
 	float: left;
 }
 

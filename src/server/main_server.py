@@ -384,12 +384,51 @@ class ItemDisplay(BaseHandler):
         myclient = pymongo.MongoClient(server_config.mongodbURL)
         mydb = myclient[server_config.mongodbDB]
         mycol = mydb["items"]
+        entcol = mydb["entities"]
+        relcol = mydb["relations"]
+        
         row = mycol.find_one({"_id": ObjectId(str(item_id))})
         if row is not None:
+            actors = []
+            cast = relcol.find({"ItemId": row["_id"], "Relation": "Actor"})
+            crew = relcol.find({"ItemId": row["_id"], "Relation": "Crew"})
+            for c in cast:
+                cm = entcol.find_one({"_id": c["EntityId"]})
+                actors.append({"Name": cm["Name"], "id": cm["_id"], "Character": c["Character"]})
+            row["actors"] = actors
             self.render_template('item.html', row)
         else:
-            data["title"] = "Error: Feed not found"
-            data["error"] = "There was an issue while retrieving the feed data. The feed probably wasn't added to the database properly."
+            data["title"] = "Error: Item not found"
+            data["error"] = "There was an issue while retrieving the item data."
+            self.render_template('error.html', data)
+            
+class EntityDisplay(BaseHandler):
+    def get(self, item_id):
+        self.session_store = sessions.get_store(request=self.request)
+        
+        myclient = pymongo.MongoClient(server_config.mongodbURL)
+        mydb = myclient[server_config.mongodbDB]
+        itemcol = mydb["items"]
+        entcol = mydb["entities"]
+        relcol = mydb["relations"]
+        
+        row = entcol.find_one({"_id": ObjectId(str(item_id))})
+        if row is not None:
+            if row["Type"] == "Person":
+                roles = []
+                cast = relcol.find({"EntityId": row["_id"]})
+                for c in cast:
+                    cm = itemcol.find_one({"_id": c["ItemId"]})
+                    roles.append({"Title": cm["Title"], "id": cm["_id"], "Character": c["Character"]})
+                row["roles"] = roles
+                self.render_template('person.html', row)
+            else:
+                data["title"] = "Error: Type Not Handled"
+                data["error"] = "This type of entity has not been handles by the server for public display."
+                self.render_template('error.html', data)        
+        else:
+            data["title"] = "Error: Entity not found"
+            data["error"] = "There was an issue while retrieving the entity data."
             self.render_template('error.html', data)
 
 
@@ -504,6 +543,7 @@ routes = [
     ('/podcast/feed/(.*)', FeedDisplay),
     ('/admin/approval/(.*)', ApproveIDHandler),
     ('/items/(.*)', ItemDisplay),
+    ('/entities/(.*)', EntityDisplay),
     ('/tags/(.*)', TagListDisplay),
     webapp2.Route('/<type:v|p>/<user_id:\d+>-<signup_token:.+>',
       handler=VerificationHandler, name='verification'),

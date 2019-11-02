@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+{% block content %}
+<div>
+	<img src="/images/{{_id}}-profile.jpg" height="450" width="300" class="main-profile">
+	<h1>{{Name}}</h1>
+	<p>{{Bio}}</p>
+
+	<div class="grid-container">
+   {% for n in roles %}
+		<div class="grid-item">
+		  <a href="/items/{{n['id']}}">
+		  <img src="/images/{{n['id']}}-poster.jpg" height="300" width="200"></br>
+		  <span class="item-name">{{n['Title']}}</span></br><span class="character-name">as {{n['Character']}}</span></a>
+		</div>
+   {% endfor %}
+   </div>
+{% endblock %}
