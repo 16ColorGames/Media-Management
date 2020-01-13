@@ -28,6 +28,7 @@ def remove_control_characters(html):
     return html
         
 def generate_feeds():
+    logging.info("Generating master feeds")
     pathlib2.Path(server_config.podcast_directory + "/.feeds").mkdir(parents=True, exist_ok=True) 
     
     myclient = pymongo.MongoClient(server_config.mongodbURL)
@@ -47,6 +48,32 @@ def generate_feeds():
                 tags[lcat] = []
             tags[lcat].append(row['_id'])
             tags['all'].append(row['_id'])
+        fg = FeedGenerator()
+        fg.load_extension('podcast')
+        fg.id(server_config.public_url + 'podcast/feed/' + str(row['_id']) + '/rss.xml')
+        fg.title(row['name'])
+        fg.link(href=server_config.public_url + "feeds/" + str(row['_id']) + ".xml", rel='alternate')
+        fg.subtitle('Feed for ' + row['name'])
+        
+        myclient = pymongo.MongoClient(server_config.mongodbURL)
+        mydb = myclient[server_config.mongodbDB]
+        mycol = mydb["episodes"]
+        feeds = []
+        feeds.append(row['_id'])
+        res = mycol.find({"feed":{"$in":feeds}})
+        for episode in res:
+            fe = fg.add_entry()
+            fe.id(episode['uuid'])
+            fe.title(remove_control_characters(episode['title'].decode('utf-8')))
+            pub = datetime.strptime(episode['published'], '%Y-%m-%d %H:%M:%S').replace(tzinfo=pytz.UTC)
+            fe.pubDate(pub)
+            fe.description(remove_control_characters(episode['description'].decode('utf-8')))
+            fe.enclosure(server_config.public_url + episode['file'].replace(server_config.podcast_directory,""),0,'audio/mpeg')
+        
+        fg.rss_str(pretty=True)
+        fg.rss_file(server_config.podcast_directory + ".feeds/single/" + str(row['_id']) + ".xml")
+        
+        
     
     for key, value in tags.iteritems():
         fg = FeedGenerator()
@@ -84,3 +111,5 @@ def generate_feeds():
         
         fg.rss_str(pretty=True)
         fg.rss_file(server_config.podcast_directory + ".feeds/" + key + ".xml")
+    
+    

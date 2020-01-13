@@ -26,7 +26,7 @@ def update_feeds():
 
 
 def update_descriptions():
-    """Connects to the database and attempts to update the desxcriptions"""
+    """Connects to the database and attempts to update the descriptions"""
     myclient = pymongo.MongoClient(server_config.mongodbURL)
     mydb = myclient[server_config.mongodbDB]
     mycol = mydb["feeds"]

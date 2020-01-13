@@ -1,23 +1,22 @@
-import time
-import webapp2_extras.appengine.auth.models
-import server_config
-import logging
 import pymongo
-from webapp2_extras import security
 from webapp2_extras import auth
+from webapp2_extras import security
+
+import server_config
+
 
 class User(object):
     def __init__(self, id, username, friendly, level):
         self.id = id
-        self.name=friendly
+        self.name = friendly
         self.username = username
         self.friendly = friendly
         self.level = level
-        
+
     def get_level(self):
         """Returns this users access level"""
         return self.level
-    
+
     def get_id(self):
         """Returns this user's unique ID, which can be an integer or string."""
         return self.id
@@ -35,7 +34,7 @@ class User(object):
             the token timestamp, or ``(None, None)`` if both were not found.
         """
         return None, None
-        
+
     @classmethod
     def get_by_auth_password(cls, auth_id, password):
         """Returns a user object, validating password.
@@ -52,15 +51,15 @@ class User(object):
         myclient = pymongo.MongoClient(server_config.mongodbURL)
         mydb = myclient[server_config.mongodbDB]
         mycol = mydb["users"]
-        
+
         user_result = mycol.find_one({"email": auth_id})
-        
+
         if user_result is None:
             raise auth.InvalidAuthIdError()
-        
+
         if not security.check_password_hash(password, user_result['password']):
             raise auth.InvalidPasswordError()
-            
+
         return User(user_result['user_id'], auth_id, user_result['friendly_name'], user_result['level'])
 
     @classmethod
@@ -82,7 +81,7 @@ class User(object):
         :param token:
             A string with the authorization token.
         """
-        
+
     @classmethod
     def create_user(cls, **user_values):
         """Creates a new user.
@@ -109,23 +108,23 @@ class User(object):
             otherwise it is a list of duplicated unique properties that
             caused creation to fail.
         """
-        
+
         if 'password_raw' in user_values:
             user_values['password'] = security.generate_password_hash(
                 user_values.pop('password_raw'), length=12)
-        
-        
+
         myclient = pymongo.MongoClient(server_config.mongodbURL)
         mydb = myclient[server_config.mongodbDB]
         mycol = mydb["users"]
-        
+
         user_result = mycol.find_one({"email": user_values['email_address']})
-        
+
         if user_result is None:
-            verify = security.generate_random_string(length=12, pool='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789')
-            user_dict = {"user_id": None, "password": user_values['password'], "email": user_values['email_address'], "activation_key": verify, "friendly_name": user_values['friendly'], "level": 5}
+            verify = security.generate_random_string(length=12,
+                                                     pool='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789')
+            user_dict = {"user_id": None, "password": user_values['password'], "email": user_values['email_address'],
+                         "activation_key": verify, "friendly_name": user_values['friendly'], "level": 5}
             mycol.insert_one(user_dict)
             return True, verify
         else:
             return False, "Email"
-        

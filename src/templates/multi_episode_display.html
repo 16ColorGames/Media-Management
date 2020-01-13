@@ -5,7 +5,7 @@
   <div id="episodes">
         {% for n in episodes %}
 		<div id = "episode">
-			<h3 id="title"><a href="http://allenodden.com:3000/podcast/feed/{{n['feed_id']}}">{{n['feed']}}</a> | {{n['title']}} | Released {{n['pubDate']}} <a href="{{n['file']}}" class="material-icons">get_app</a><a href="#" id="play" data-value="{{n['file']}}" data-title="{{n['title']}}" class="material-icons">playlist_play</a></h3>
+			<h3 id="title"><a href="http://allenodden.com:3000/podcast/feed/{{n['feed_id']}}">{{n['feed_name']}}</a> | {{n['title']}} | Released {{n['pubDate']}} <a href="{{n['file']}}" class="material-icons">get_app</a><a href="#" id="play" data-value="{{n['file']}}" data-title="{{n['title']}}" class="material-icons">playlist_play</a></h3>
 			<p>{{n['description']}}</p>
 		</div>
         {% endfor %}

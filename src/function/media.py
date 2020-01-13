@@ -129,6 +129,7 @@ def process_item_basic_request(request):
     mydb = myclient[server_config.mongodbDB]
     itemcol = mydb["items"]
     tagcol = mydb["tags"]
+    recol = mydb["requests"]
     
     item = itemcol.find_one({"_id": request["Id"]})
     
@@ -154,12 +155,14 @@ def process_item_basic_request(request):
     try:
         first = data["results"][0]
         
-        tags = [tagcol.find_one({"Name":"Automatic","Type":"Admin"}).get("_id")]
+        tags = []
         item["Tags"] = tags
         item["Title"] = first["title"]
         item["TMDBid"] = first["id"]
         
         itemcol.insert_one(item)
+        recol.insert_one({"Object":"Item", "Id": item.get("_id"), "Type":"Full"})
+        recol.insert_one({"Object":"Item", "Id": item.get("_id"), "Type":"Cast"})
     except IndexError:
         print("Search failed for " + item["File"])
         pass

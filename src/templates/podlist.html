@@ -3,9 +3,18 @@
   <p>Current podcasts:</p>
   <p>{{description}}</p>
 	{% for n in feeds %}
+	{% if n['private'] == True %}
+		{% if user.name %}
 	<div id="feed">
 		<a href="/podcast/feed/{{n['_id']}}"><h3 id="title">{{n['name']}}</h3></a>
 		<p><img src="{{n['slug']}}" style="width:50px;height:50px;" ALIGN="left">{{n['description']}}</p><br><br>
 	</div>
+		{% endif %}
+	{% else %}
+	<div id="feed">
+		<a href="/podcast/feed/{{n['_id']}}"><h3 id="title">{{n['name']}}</h3></a>
+		<p><img src="{{n['slug']}}" style="width:50px;height:50px;" ALIGN="left">{{n['description']}}</p><br><br>
+	</div>
+	{% endif %}
 	{% endfor %}
 {% endblock %}
